@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Agent Pro - AI-Powered Research Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-message {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .typing-indicator span {
+            animation: blink 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes blink {
+            0%, 60%, 100% { opacity: 0.3; }
+            30% { opacity: 1; }
+        }
+
+        .chart-container {
+            min-height: 400px;
+        }
+
+        .sidebar {
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-closed {
+            transform: translateX(-100%);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                z-index: 50;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar fixed left-0 top-0 w-80 h-full bg-gray-800 border-r border-gray-700 overflow-y-auto z-40">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-8">
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    Research Pro
+                </h1>
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <button onclick="newChat()" class="w-full mb-6 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg font-semibold hover:shadow-lg transition-all">
+                + New Research
+            </button>
+
+            <div class="space-y-2">
+                <h2 class="text-xs font-semibold text-gray-400 uppercase mb-3">Recent Searches</h2>
+                <div id="history" class="space-y-2">
+                    <!-- History items will be added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main" class="ml-80 min-h-screen flex flex-col transition-all">
+
+        <!-- Header -->
+        <div class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between sticky top-0 z-30">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <h2 class="text-lg font-semibold text-gray-300">AI Research Assistant</h2>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="exportToPDF()" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors">
+                    Export PDF
+                </button>
+                <div class="w-2 h-2 bg-green-500 rounded-full" title="Backend Online"></div>
+            </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div id="chat" class="flex-1 overflow-y-auto px-6 py-8">
+            <!-- Welcome Message -->
+            <div id="welcome" class="max-w-4xl mx-auto text-center py-20">
+                <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+                <h1 class="text-4xl font-bold mb-4">What would you like to research today?</h1>
+                <p class="text-gray-400 text-lg mb-8">Ask anything and get comprehensive research with charts, insights, and sources</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                    <button onclick="setQuery('AI startup funding trends in 2024')" class="text-left p-4 bg-gray-800 hover:bg-gray-700 rounded-xl border border-gray-700 transition-all">
+                        <div class="font-semibold mb-1">AI Startup Trends</div>
+                        <div class="text-sm text-gray-400">Analyze funding trends and market dynamics</div>
+                    </button>
+                    <button onclick="setQuery('Electric vehicle market share by country')" class="text-left p-4 bg-gray-800 hover:bg-gray-700 rounded-xl border border-gray-700 transition-all">
+                        <div class="font-semibold mb-1">EV Market Analysis</div>
+                        <div class="text-sm text-gray-400">Compare global adoption rates</div>
+                    </button>
+                    <button onclick="setQuery('Climate change impact on agriculture 2024')" class="text-left p-4 bg-gray-800 hover:bg-gray-700 rounded-xl border border-gray-700 transition-all">
+                        <div class="font-semibold mb-1">Climate & Agriculture</div>
+                        <div class="text-sm text-gray-400">Environmental impact research</div>
+                    </button>
+                    <button onclick="setQuery('Cryptocurrency adoption rates worldwide')" class="text-left p-4 bg-gray-800 hover:bg-gray-700 rounded-xl border border-gray-700 transition-all">
+                        <div class="font-semibold mb-1">Crypto Adoption</div>
+                        <div class="text-sm text-gray-400">Global cryptocurrency trends</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages will be added here -->
+        </div>
+
+        <!-- Input Area -->
+        <div class="border-t border-gray-700 bg-gray-800 p-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex gap-4">
+                    <textarea
+                        id="query-input"
+                        placeholder="Ask a research question... (e.g., 'What are the latest AI trends?' or 'Compare renewable energy adoption')"
+                        class="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                        rows="3"
+                        onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); doResearch(); }"
+                    ></textarea>
+                    <button
+                        onclick="doResearch()"
+                        id="send-btn"
+                        class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-semibold hover:shadow-lg transition-all self-end"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="mt-2 text-xs text-gray-500">
+                    Press Enter to send, Shift+Enter for new line
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chatHistory = [];
+        let currentThreadId = null;
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const main = document.getElementById('main');
+            sidebar.classList.toggle('sidebar-closed');
+            main.classList.toggle('ml-0');
+            main.classList.toggle('ml-80');
+        }
+
+        function newChat() {
+            chatHistory = [];
+            currentThreadId = Date.now();
+            document.getElementById('chat').innerHTML = document.getElementById('welcome').parentElement.innerHTML;
+            document.getElementById('query-input').value = '';
+        }
+
+        function setQuery(query) {
+            document.getElementById('query-input').value = query;
+            document.getElementById('query-input').focus();
+        }
+
+        async function doResearch() {
+            const query = document.getElementById('query-input').value.trim();
+            if (!query) return;
+
+            // Hide welcome message
+            const welcome = document.getElementById('welcome');
+            if (welcome) welcome.remove();
+
+            // Add user message
+            addMessage('user', query);
+
+            // Clear input
+            document.getElementById('query-input').value = '';
+
+            // Show typing indicator
+            const typingId = addTypingIndicator();
+
+            // Disable send button
+            document.getElementById('send-btn').disabled = true;
+
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/research/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+
+                // Remove typing indicator
+                document.getElementById(typingId).remove();
+
+                // Add assistant response
+                addResearchResponse(data);
+
+                // Add to history
+                addToHistory(query, data);
+
+                // Save chat
+                chatHistory.push({ role: 'user', content: query });
+                chatHistory.push({ role: 'assistant', content: data });
+
+            } catch (error) {
+                document.getElementById(typingId).remove();
+                addMessage('error', 'Failed to perform research. Please make sure the backend is running on http://localhost:8000');
+                console.error('Research error:', error);
+            }
+
+            // Re-enable send button
+            document.getElementById('send-btn').disabled = false;
+        }
+
+        function addMessage(type, content) {
+            const chat = document.getElementById('chat');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message max-w-4xl mx-auto mb-6';
+
+            if (type === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="flex justify-end">
+                        <div class="max-w-3xl bg-blue-600 rounded-2xl px-6 py-4">
+                            <div class="text-sm font-semibold mb-1 opacity-90">You</div>
+                            <div class="text-white">${content}</div>
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'error') {
+                messageDiv.innerHTML = `
+                    <div class="max-w-3xl bg-red-900/30 border border-red-800 rounded-2xl px-6 py-4">
+                        <div class="text-red-400">${content}</div>
+                    </div>
+                `;
+            }
+
+            chat.appendChild(messageDiv);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function addTypingIndicator() {
+            const chat = document.getElementById('chat');
+            const id = 'typing-' + Date.now();
+            const typingDiv = document.createElement('div');
+            typingDiv.id = id;
+            typingDiv.className = 'chat-message max-w-4xl mx-auto mb-6';
+            typingDiv.innerHTML = `
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-semibold mb-1 text-gray-300">Research Agent</div>
+                        <div class="typing-indicator flex gap-1">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                            <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                            <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        </div>
+                        <div class="text-sm text-gray-400 mt-2">Researching your query...</div>
+                    </div>
+                </div>
+            `;
+            chat.appendChild(typingDiv);
+            chat.scrollTop = chat.scrollHeight;
+            return id;
+        }
+
+        let chartCounter = 0;
+
+        function addResearchResponse(data) {
+            const chat = document.getElementById('chat');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message max-w-4xl mx-auto mb-8';
+            const responseId = 'response-' + Date.now();
+
+            let chartsHTML = '';
+            const chartIds = [];
+            if (data.charts && data.charts.length > 0) {
+                chartsHTML = `
+                    <div class="mt-6 space-y-6">
+                        <h3 class="text-xl font-semibold mb-4">📊 Visualizations</h3>
+                        ${data.charts.map((chart, i) => {
+                            const chartId = `chart-${responseId}-${i}`;
+                            chartIds.push({ id: chartId, data: chart });
+                            return `
+                                <div class="bg-white rounded-xl p-6 shadow-lg">
+                                    <h4 class="text-gray-900 font-semibold mb-4">${chart.title}</h4>
+                                    <div id="${chartId}" style="width:100%; height:400px;"></div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }
+
+            let infographicsHTML = '';
+            if (data.infographics && data.infographics.length > 0) {
+                infographicsHTML = `
+                    <div class="mt-6">
+                        <h3 class="text-xl font-semibold mb-4">📈 Key Statistics & Infographics</h3>
+                        ${data.infographics.map(info => `
+                            <div class="bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-2xl p-8 backdrop-blur-sm">
+                                <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
+                                    ${info.stats.map(stat => `
+                                        <div class="text-center p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-all">
+                                            <div class="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
+                                                ${stat.value}
+                                            </div>
+                                            <div class="text-sm text-gray-300 font-medium">${stat.label}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <div class="mt-4 text-center text-sm text-gray-400">
+                                    Auto-generated from research data
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            let insightsHTML = '';
+            if (data.insights) {
+                insightsHTML = `
+                    <div class="mt-6 space-y-4">
+                        <h3 class="text-xl font-semibold">AI Insights</h3>
+                        <div class="bg-gray-800/50 rounded-xl p-6">
+                            <p class="text-gray-300 leading-relaxed">${data.insights.summary || ''}</p>
+                        </div>
+                        ${data.insights.key_insights && data.insights.key_insights.length > 0 ? `
+                            <div class="space-y-3">
+                                <h4 class="font-semibold text-gray-300">Key Findings:</h4>
+                                ${data.insights.key_insights.map(insight => `
+                                    <div class="flex gap-3 items-start">
+                                        <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                                        <div class="text-gray-300">${insight}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+
+            let sourcesHTML = '';
+            if (data.sources && data.sources.length > 0) {
+                sourcesHTML = `
+                    <div class="mt-6">
+                        <h3 class="text-xl font-semibold mb-4">Sources (${data.sources.length})</h3>
+                        <div class="space-y-2">
+                            ${data.sources.slice(0, 10).map((source, i) => `
+                                <a href="${source.url}" target="_blank" class="block p-3 bg-gray-800/30 hover:bg-gray-800/50 rounded-lg transition-colors">
+                                    <div class="text-blue-400 text-sm">[${i + 1}] ${source.title || 'Source'}</div>
+                                    <div class="text-xs text-gray-500 truncate">${source.url}</div>
+                                </a>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            messageDiv.innerHTML = `
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-semibold mb-4 text-gray-300">Research Agent</div>
+                        ${infographicsHTML}
+                        ${chartsHTML}
+                        ${insightsHTML}
+                        ${sourcesHTML}
+                    </div>
+                </div>
+            `;
+
+            chat.appendChild(messageDiv);
+
+            // Render charts with delay to ensure DOM is ready
+            if (chartIds.length > 0) {
+                setTimeout(() => {
+                    chartIds.forEach(({id, data: chart}) => {
+                        try {
+                            const element = document.getElementById(id);
+                            if (!element) {
+                                console.error('Chart element not found:', id);
+                                return;
+                            }
+
+                            const chartData = JSON.parse(chart.data);
+
+                            // Make layout more responsive
+                            const layout = {
+                                ...chartData.layout,
+                                autosize: true,
+                                margin: { l: 50, r: 50, t: 60, b: 50 }
+                            };
+
+                            Plotly.newPlot(
+                                id,
+                                chartData.data,
+                                layout,
+                                { responsive: true, displayModeBar: true, displaylogo: false }
+                            );
+
+                            console.log('Chart rendered successfully:', id);
+                        } catch (e) {
+                            console.error('Chart rendering error for', id, ':', e);
+                            document.getElementById(id).innerHTML = `
+                                <div class="text-red-600 p-4 text-center">
+                                    Failed to render chart. See console for details.
+                                </div>
+                            `;
+                        }
+                    });
+                }, 100);
+            }
+
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function addToHistory(query, data) {
+            const history = document.getElementById('history');
+            const item = document.createElement('button');
+            item.className = 'w-full text-left px-3 py-2 hover:bg-gray-700 rounded-lg transition-colors text-sm';
+            item.innerHTML = `
+                <div class="font-medium truncate">${query}</div>
+                <div class="text-xs text-gray-500">${new Date().toLocaleTimeString()}</div>
+            `;
+            item.onclick = () => {
+                setQuery(query);
+            };
+            history.insertBefore(item, history.firstChild);
+
+            // Keep only last 10
+            if (history.children.length > 10) {
+                history.removeChild(history.lastChild);
+            }
+        }
+
+        function exportToPDF() {
+            const element = document.getElementById('chat');
+            const opt = {
+                margin: 10,
+                filename: 'research-' + new Date().toISOString().split('T')[0] + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // Check backend health on load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('http://localhost:8000/health');
+                const data = await response.json();
+                console.log('Backend status:', data);
+            } catch (e) {
+                console.error('Backend not reachable:', e);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Agent Pro - LIVE TEST!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 min-h-screen">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-bold text-white mb-4">
+                Research Agent Pro - LIVE TEST
+            </h1>
+            <p class="text-xl text-slate-300">
+                Backend is running! Test real research with charts!
+            </p>
+            <div class="mt-4 inline-block px-4 py-2 bg-green-500 text-white rounded-lg">
+                ✅ Backend Status: RUNNING on http://localhost:8000
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 mb-8">
+            <h2 class="text-2xl font-bold text-white mb-4">Try a Research Query:</h2>
+            <div class="flex gap-4">
+                <input
+                    type="text"
+                    id="query-input"
+                    value="AI startup funding trends 2024"
+                    placeholder="Enter your research query..."
+                    class="flex-1 px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                    onclick="doResearch()"
+                    id="search-btn"
+                    class="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+                >
+                    Research Now!
+                </button>
+            </div>
+
+            <!-- Example queries -->
+            <div class="mt-4">
+                <p class="text-sm text-slate-400 mb-2">Quick examples:</p>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="setQuery('AI startup funding trends 2024')" class="px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/20 rounded text-sm text-white">
+                        AI Startups 2024
+                    </button>
+                    <button onclick="setQuery('Electric vehicle market share by country')" class="px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/20 rounded text-sm text-white">
+                        EV Market Share
+                    </button>
+                    <button onclick="setQuery('Climate change impact on agriculture')" class="px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/20 rounded text-sm text-white">
+                        Climate & Agriculture
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="hidden bg-blue-500/20 border border-blue-500/30 rounded-xl p-6 mb-8">
+            <div class="flex items-center justify-center space-x-4">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
+                <div class="text-white">
+                    <div class="font-semibold">Researching...</div>
+                    <div class="text-sm text-slate-300" id="loading-status">Analyzing query...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error -->
+        <div id="error" class="hidden bg-red-500/20 border border-red-500/30 rounded-xl p-6 mb-8">
+            <h3 class="text-xl font-bold text-red-400 mb-2">Error</h3>
+            <p class="text-white" id="error-message"></p>
+            <p class="text-sm text-slate-300 mt-2">Make sure the backend is running on http://localhost:8000</p>
+        </div>
+
+        <!-- Results -->
+        <div id="results" class="hidden space-y-8">
+            <!-- Charts -->
+            <div id="charts-container" class="space-y-6"></div>
+
+            <!-- Insights -->
+            <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-8">
+                <h3 class="text-2xl font-bold text-white mb-4">AI Insights</h3>
+                <div id="insights-content" class="text-slate-200"></div>
+            </div>
+
+            <!-- Sources -->
+            <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-8">
+                <h3 class="text-2xl font-bold text-white mb-4">Sources</h3>
+                <div id="sources-content" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setQuery(query) {
+            document.getElementById('query-input').value = query;
+        }
+
+        async function doResearch() {
+            const query = document.getElementById('query-input').value;
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const results = document.getElementById('results');
+            const searchBtn = document.getElementById('search-btn');
+
+            // Show loading
+            loading.classList.remove('hidden');
+            error.classList.add('hidden');
+            results.classList.add('hidden');
+            searchBtn.disabled = true;
+            searchBtn.textContent = 'Researching...';
+
+            try {
+                // Update loading status
+                document.getElementById('loading-status').textContent = 'Searching Google...';
+
+                const response = await fetch('http://localhost:8000/api/v1/research/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                document.getElementById('loading-status').textContent = 'Analyzing data...';
+                const data = await response.json();
+
+                document.getElementById('loading-status').textContent = 'Generating charts...';
+
+                // Hide loading, show results
+                loading.classList.add('hidden');
+                results.classList.remove('hidden');
+
+                // Display charts
+                displayCharts(data.charts);
+
+                // Display insights
+                displayInsights(data.insights);
+
+                // Display sources
+                displaySources(data.sources);
+
+            } catch (err) {
+                loading.classList.add('hidden');
+                error.classList.remove('hidden');
+                document.getElementById('error-message').textContent = err.message;
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = 'Research Now!';
+            }
+        }
+
+        function displayCharts(charts) {
+            const container = document.getElementById('charts-container');
+            container.innerHTML = '';
+
+            charts.forEach((chart, index) => {
+                const chartDiv = document.createElement('div');
+                chartDiv.className = 'bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6';
+                chartDiv.innerHTML = `
+                    <h3 class="text-xl font-semibold text-white mb-4">${chart.title}</h3>
+                    <div id="chart-${index}" class="bg-white rounded-lg p-4"></div>
+                `;
+                container.appendChild(chartDiv);
+
+                // Parse and display Plotly chart
+                try {
+                    const plotlyData = JSON.parse(chart.data);
+                    Plotly.newPlot(`chart-${index}`, plotlyData.data, plotlyData.layout, {responsive: true});
+                } catch (e) {
+                    console.error('Error displaying chart:', e);
+                }
+            });
+        }
+
+        function displayInsights(insights) {
+            const container = document.getElementById('insights-content');
+            container.innerHTML = `
+                <div class="prose prose-invert max-w-none">
+                    <p class="text-lg mb-4">${insights.summary || 'Analysis in progress...'}</p>
+                    ${insights.key_insights && insights.key_insights.length > 0 ? `
+                        <h4 class="text-white font-semibold mt-4 mb-2">Key Insights:</h4>
+                        <ul class="space-y-2">
+                            ${insights.key_insights.map(insight => `<li>${insight}</li>`).join('')}
+                        </ul>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function displaySources(sources) {
+            const container = document.getElementById('sources-content');
+            if (!sources || sources.length === 0) {
+                container.innerHTML = '<p class="text-slate-400">No sources available</p>';
+                return;
+            }
+
+            container.innerHTML = sources.slice(0, 10).map((source, i) => `
+                <a href="${source.url}" target="_blank" class="block p-3 bg-white/5 hover:bg-white/10 rounded-lg transition-colors">
+                    <div class="text-blue-400">[${i + 1}] ${source.title}</div>
+                    <div class="text-sm text-slate-400 truncate">${source.url}</div>
+                </a>
+            `).join('');
+        }
+
+        // Test connection on load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('http://localhost:8000/health');
+                const data = await response.json();
+                console.log('Backend status:', data);
+            } catch (e) {
+                console.error('Backend not reachable:', e);
+            }
+        });
+    </script>
+</body>
+</html>

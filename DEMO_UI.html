@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Agent Pro - UI Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #0f172a, #1e3a8a, #0f172a);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-white/10 backdrop-blur-sm bg-white/5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                    </svg>
+                    <h1 class="text-2xl font-bold text-white">Research Agent Pro</h1>
+                </div>
+                <a href="https://github.com/MAYANK12-WQ/research-agent-pro" target="_blank" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-all">
+                    GitHub ⭐
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div class="text-center space-y-8">
+            <!-- Hero Text -->
+            <div class="space-y-4">
+                <h2 class="text-5xl md:text-7xl font-bold text-white">
+                    Research anything,
+                    <br>
+                    <span class="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                        get insights instantly
+                    </span>
+                </h2>
+                <p class="text-xl text-slate-300 max-w-2xl mx-auto">
+                    The most sophisticated AI research agent with automatic charts, graphs, and infographics
+                </p>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="max-w-3xl mx-auto">
+                <div class="relative group">
+                    <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity"></div>
+                    <div class="relative bg-white rounded-2xl shadow-2xl p-2">
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 text-slate-400 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            <input type="text" placeholder="Ask me anything... (e.g., 'AI startup funding trends 2024')" class="flex-1 px-4 py-4 text-lg outline-none text-slate-900">
+                            <button onclick="showDemo()" class="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all">
+                                Research
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Example Queries -->
+            <div class="space-y-4">
+                <p class="text-sm text-slate-400">Try these examples:</p>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <button class="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm text-white transition-all">
+                        AI startup funding trends in Europe 2024
+                    </button>
+                    <button class="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm text-white transition-all">
+                        Compare iPhone vs Android market share in Asia
+                    </button>
+                    <button class="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm text-white transition-all">
+                        Electric vehicle adoption by country
+                    </button>
+                </div>
+            </div>
+
+            <!-- Features -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 max-w-4xl mx-auto">
+                <div class="p-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl">
+                    <svg class="w-12 h-12 text-blue-400 mb-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                    <h3 class="text-lg font-semibold text-white mb-2">Auto Charts</h3>
+                    <p class="text-slate-300 text-sm">
+                        Automatically generates line, bar, pie, and scatter charts
+                    </p>
+                </div>
+
+                <div class="p-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl">
+                    <svg class="w-12 h-12 text-purple-400 mb-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    <h3 class="text-lg font-semibold text-white mb-2">Infographics</h3>
+                    <p class="text-slate-300 text-sm">
+                        Beautiful infographics with key statistics and insights
+                    </p>
+                </div>
+
+                <div class="p-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl">
+                    <svg class="w-12 h-12 text-green-400 mb-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <h3 class="text-lg font-semibold text-white mb-2">Export Anywhere</h3>
+                    <p class="text-slate-300 text-sm">
+                        PDF, PowerPoint, PNG, Markdown - your choice
+                    </p>
+                </div>
+            </div>
+
+            <!-- Demo Notice -->
+            <div id="demo-notice" class="hidden mt-16 p-6 bg-blue-500/20 border border-blue-500/30 rounded-xl max-w-2xl mx-auto">
+                <h3 class="text-2xl font-bold text-white mb-4">🎨 This is a UI Preview!</h3>
+                <p class="text-slate-200 mb-4">
+                    To see the full working version with real research:
+                </p>
+                <ol class="text-left text-slate-200 space-y-2 mb-4">
+                    <li>1. Get API keys (Serper + Tavily) - takes 5 minutes</li>
+                    <li>2. Run: <code class="bg-black/30 px-2 py-1 rounded">cd frontend && npm install && npm run dev</code></li>
+                    <li>3. Open: <code class="bg-black/30 px-2 py-1 rounded">http://localhost:3000</code></li>
+                </ol>
+                <p class="text-sm text-slate-300">
+                    See <code class="bg-black/30 px-2 py-1 rounded">QUICK_API_SETUP.md</code> for detailed instructions
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-slate-400 text-sm">
+            <p>Built with 💡 by <a href="https://github.com/MAYANK12-WQ" class="text-blue-400 hover:underline">Mayank</a></p>
+            <p class="mt-2">100% Free & Open Source • Better than $20/month tools</p>
+        </div>
+    </footer>
+
+    <script>
+        function showDemo() {
+            document.getElementById('demo-notice').classList.remove('hidden');
+            alert('This is a UI preview! To get the full working version:\n\n1. Get Serper API (https://serper.dev/) - 2 min\n2. Get Tavily API (https://tavily.com/) - 3 min\n3. Add keys to backend/.env\n4. Run the app!\n\nSee QUICK_API_SETUP.md for details.');
+        }
+    </script>
+</body>
+</html>
