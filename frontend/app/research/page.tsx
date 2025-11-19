@@ -1,11 +1,12 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, Download, Share2, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-export default function ResearchPage() {
+function ResearchPageContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || 'AI startup funding trends';
 
